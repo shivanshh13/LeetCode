@@ -1,0 +1,111 @@
+#include <stdbool.h>
+#include <stdlib.h>
+
+// Simple Hash Map implementation for (remainder, index)
+// Using open addressing for simplicity and demonstration.
+// For large inputs, a more robust hash map is needed, but this
+// illustrates the core logic.
+
+typedef struct {
+    long key;      // remainder (0 to k-1)
+    int value;     // index
+    bool occupied;
+} HashEntry;
+
+typedef struct {
+    HashEntry* table;
+    int size;
+} HashMap;
+
+// Basic initialization
+void initHashMap(HashMap* map, int size) {
+    map->size = size;
+    map->table = (HashEntry*)calloc(size, sizeof(HashEntry));
+}
+
+// Simple hash function (remainder is already the key)
+int hash(long key, int size) {
+    return (int)(key % size);
+}
+
+// Insert or update (stores the first index, which is what we need)
+void putHashMap(HashMap* map, long key, int value) {
+    int index = hash(key, map->size);
+    while (map->table[index].occupied) {
+        if (map->table[index].key == key) {
+            // Found existing key, do nothing as we want the first index
+            return;
+        }
+        index = (index + 1) % map->size;
+    }
+    map->table[index].key = key;
+    map->table[index].value = value;
+    map->table[index].occupied = true;
+}
+
+// Get value
+bool getHashMap(HashMap* map, long key, int* value) {
+    int index = hash(key, map->size);
+    while (map->table[index].occupied) {
+        if (map->table[index].key == key) {
+            *value = map->table[index].value;
+            return true;
+        }
+        index = (index + 1) % map->size;
+    }
+    return false;
+}
+
+void freeHashMap(HashMap* map) {
+    free(map->table);
+}
+
+// Main function to solve the problem
+bool checkSubarraySum(int* nums, int numsSize, int k) {
+    // k is up to 2^31-1, so we must use a hash map.
+    // The prefix sums can exceed 2^31-1, so use long for current_sum.
+
+    // The maximum size for k is large, so a fixed size for the map
+    // must be large enough or dynamic. Let's use a reasonable size
+    // and assume collisions are handled fine for this problem.
+    // A better solution would use a dynamically resizing hash map.
+    int map_size = numsSize + 1;
+    HashMap map;
+    initHashMap(&map, map_size);
+
+    // Initial prefix sum remainder 0 is at index -1 (before the array starts)
+    // This handles subarrays starting at index 0.
+    putHashMap(&map, 0L, -1);
+
+    long current_sum = 0L;
+
+    for (int i = 0; i < numsSize; i++) {
+        current_sum += nums[i];
+
+        // The remainder we are looking for is current_sum % k.
+        // We use a cast to long for k to handle the modulo operation correctly
+        // if k is large and current_sum is large.
+        long remainder = current_sum % k;
+
+        int prev_index;
+        if (getHashMap(&map, remainder, &prev_index)) {
+            // Found a previous index prev_index such that
+            // P[i+1] % k == P[prev_index+1] % k
+            // The subarray is from prev_index + 1 to i.
+            // Length is i - (prev_index + 1) + 1 = i - prev_index.
+
+            if (i - prev_index >= 2) {
+                freeHashMap(&map);
+                return true;
+            }
+        } else {
+            // Only store the first time we see a remainder.
+            // This is because we need the smallest index prev_index
+            // to maximize the subarray length i - prev_index.
+            putHashMap(&map, remainder, i);
+        }
+    }
+
+    freeHashMap(&map);
+    return false;
+}
