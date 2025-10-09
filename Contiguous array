@@ -1,0 +1,48 @@
+class Solution {
+public:
+    int findMaxLength(vector<int>& nums) {
+        unordered_map<int, int> sumIndex; // Maps sum -> first index where sum occurs
+        sumIndex[0] = -1; // Base case: sum 0 at index -1
+        
+        int sum = 0;
+        int maxLen = 0;
+        
+        for (int i = 0; i < nums.size(); i++) {
+            // Treat 0 as -1, so equal 0s and 1s give sum = 0
+            sum += (nums[i] == 1) ? 1 : -1;
+            
+            if (sumIndex.find(sum) != sumIndex.end()) {
+                // Found same sum before, calculate subarray length
+                maxLen = max(maxLen, i - sumIndex[sum]);
+            } else {
+                // First time seeing this sum, record the index
+                sumIndex[sum] = i;
+            }
+        }
+        
+        return maxLen;
+    }
+};
+
+// Example usage and test cases
+/*
+Test Case 1: nums = [0,1]
+- i=0: sum=-1, sumIndex[-1]=0
+- i=1: sum=0, found at -1, len=1-(-1)=2 ✓
+
+Test Case 2: nums = [0,1,0]
+- i=0: sum=-1, sumIndex[-1]=0
+- i=1: sum=0, found at -1, len=1-(-1)=2
+- i=2: sum=-1, found at 0, len=2-0=2 ✓
+
+Test Case 3: nums = [0,1,1,1,1,1,0,0,0]
+- i=0: sum=-1, sumIndex[-1]=0
+- i=1: sum=0, found at -1, len=1-(-1)=2
+- i=2: sum=1, sumIndex[1]=2
+- i=3: sum=2, sumIndex[2]=3
+- i=4: sum=3, sumIndex[3]=4
+- i=5: sum=4, sumIndex[4]=5
+- i=6: sum=3, found at 4, len=6-4=2
+- i=7: sum=2, found at 3, len=7-3=4
+- i=8: sum=1, found at 2, len=8-2=6 ✓
+*/
