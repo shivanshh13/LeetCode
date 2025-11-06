@@ -1,0 +1,49 @@
+/**
+ * Forward declaration of guess API.
+ * @param  num   your guess
+ * @return 	     -1 if num is higher than the picked number
+ *			      1 if num is lower than the picked number
+ * 0 if num is equal to the picked number
+ */
+// int guess(int num);
+
+class Solution {
+public:
+    /**
+     * @brief Finds the number picked by using Binary Search.
+     * * @param n The upper bound of the range [1, n].
+     * @return The number that was picked.
+     */
+    int guessNumber(int n) {
+        // Initialize the search space.
+        // Using 'long long' for 'low', 'high', and 'mid' is a safe practice 
+        // to prevent potential integer overflow when n is close to the maximum 
+        // value of an 'int' and calculating 'low + high'.
+        long long low = 1;
+        long long high = n;
+        
+        while (low <= high) {
+            // Calculate the middle point. This formula prevents overflow.
+            long long mid = low + (high - low) / 2;
+            
+            // Call the pre-defined API.
+            int result = guess((int)mid);
+            
+            if (result == 0) {
+                // Found the number!
+                return (int)mid;
+            } else if (result == 1) {
+                // The guess 'mid' is too low (mid < pick). 
+                // The target must be in the upper half.
+                low = mid + 1;
+            } else { // result == -1
+                // The guess 'mid' is too high (mid > pick).
+                // The target must be in the lower half.
+                high = mid - 1;
+            }
+        }
+        
+        // This line should not be reached based on the constraints (1 <= pick <= n).
+        return -1; 
+    }
+};
